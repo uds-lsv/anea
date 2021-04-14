@@ -1,0 +1,21 @@
+{
+   "NAME": "ner_neural_03_en-special-loc_dist-crf_01",
+   "PATH_TRAIN": "../data/conll_en/special_loc/eng.special-loc.only-loc.no-other.train.first1000",
+   "PATH_TRAIN_DISTANT": "../data/conll_en/special_loc/autom_annotated_crf/eng.bio2.train.last200k_no-MISC_autom-ann-crf",
+   "PATH_DEV": "../data/conll_en/special_loc/eng.special-loc.only-loc.no-other.train.after-first1000-500",
+   "PATH_TEST": "../data/conll_en/special_loc/eng.special-loc.only-loc.no-other.testb",
+   "DATA_SEPARATOR": " ",
+   "LABEL_MAP": {"O": 0, "B-CITY": 1, "I-CITY": 2, "B-COUNTRY": 3, "I-COUNTRY": 4, "B-CONTINENT": 5, "I-CONTINENT": 6},
+   "EMBEDDING": "fasttext-cc-en",
+   "CONTEXT_LENGTH": 1,
+   "RNN_TYPE": "GRU",
+   "RNN_SIZE": 300,
+   "DENSE_SIZE": 100,
+   "DENSE_ACTIVATION": "relu",
+   "DROPOUT_1": 0.2,
+   "DROPOUT_2": 0.2,
+   "DROPOUT_3": 0.2,
+   "BATCH_SIZE": 50,
+   "EPOCHS": 50,
+   "USE_NOISY": true
+}

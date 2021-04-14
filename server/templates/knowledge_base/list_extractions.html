@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block nav_extractions %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Annotation Rules Extracted from Knowledge Base{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<script>
+  // make submit button visible when a corresponding field is edited
+  function on_click_make_submit_btn_visible(extraction_id) {
+    $("#submit_property_changes_btn" + extraction_id).show();
+  }
+  // show the configuration form when clicked (currently not active)
+  function on_click_show_configuration(extraction_id) {
+    $("#extraction_" + extraction_id + "_configuration").show();
+    $("#extraction_" + extraction_id + "_configuration_showlink").hide();
+  }
+  // submit configuration form via ajax
+  function on_click_submit_form_ajax(extraction_id) {
+    $("#extraction_" + extraction_id + "_configuration_form").submit(function(e) {
+      var form = $(this);
+      var url = form.attr('action');
+
+      $.ajax({
+             type: "POST",
+             url: url,
+             data: form.serialize(),
+             success: function(result)
+             {
+               if(result["successful"]) {
+                  $("#submit_property_changes_btn" + extraction_id).hide();
+                  $("#submit_property_changes_feedback" + extraction_id).hide();
+                  location.reload();
+               } else {
+                  console.log(result["error_msg"]);
+                  $("#submit_property_changes_feedback" + extraction_id).text(result["error_msg"]);
+                  $("#submit_property_changes_feedback" + extraction_id).show();
+               }
+             }
+           });
+
+      e.preventDefault();
+    });
+  }
+  // call load of extraction (for a specific extraction_identifier) in the backend
+  function on_click_load(extraction_id, extraction_identifier) {
+    $("#extraction_" + extraction_id + "_state_loading").show();
+    $("#extraction_" + extraction_id + "_state_not_loaded").hide();
+    
+    $.getJSON("/knowledge_base/load_extract/" + extraction_identifier, function(result){
+        if(result["successful"]){
+            $("#extraction_" + extraction_id + "_state_finished_loading").show();
+        } else {
+            $('#result_error').append("Error message: " + result["error_msg"]);
+            $('#result_error').show();
+            window.scrollTo(0, 0);
+        }
+        $("#extraction_" + extraction_id + "_state_loading").hide();
+    });
+  }
+  // call load of extraction in the backend for a extraction_identifier substring (matching process in the backend)
+  // special case, not a full extraction_identifier but a partial match entered by the user in the corresponding form field
+  function on_click_load_all() {
+    extraction_id = "x"; // using this special id for the specific feedback box, in contrast to the usual counter (i)
+    extraction_identifier = $("#extraction_matching_string_field").val();  
+    on_click_load(extraction_id, extraction_identifier);
+  }
+  
+  // call unload of extraction in the backend
+  function on_click_unload(extraction_identifier) {
+    $.getJSON("/knowledge_base/unload_extract/" + extraction_identifier, function(result){
+        if(result["successful"]){
+            location.reload(); // reload page at same position to show updated version of the specific entry
+        } else {
+            $('#result_error').append("Error message: " + result["error_msg"]);
+            $('#result_error').show();
+            window.scrollTo(0, 0);
+        }
+    });
+  }
+  // call unload of extraction in the backend for a extraction_identifier substring (matching process in the backend)
+  // special case, not a full extraction_identifier but a partial match entered by the user in the corresponding form field
+  function on_click_unload_all() {
+    extraction_identifier = $("#extraction_matching_string_field").val();   
+    $.getJSON("/knowledge_base/unload_extract/" + extraction_identifier, function(result){
+        if(result["successful"]){
+            location.href= location.href; // go to top of page if matching substring when reloading
+        } else {
+            $('#result_error').append("Error message: " + result["error_msg"]);
+            $('#result_error').show();
+            window.scrollTo(0, 0);
+        }
+    });
+  }
+</script>
+
+<div id="result_error" class="alert alert-danger" style="display:none">
+</div>
+
+{% for i in range(extractions | length) %}
+
+<div class="card mb-2">
+  <div class="card-header">
+    Extraction {{ extractions[i].get_identifier() }}
+    
+    <!-- Unload button, only visible if extraction loaded -->
+    {% if extraction_states[i].value == "loaded" %}
+      <button type="button" class="close" onclick="on_click_unload('{{ extractions[i].get_identifier() }}');">&times;</button>
+    {% endif %}
+  </div>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item">
+      {% if extractions[i]._instance_of_property == "manual_entry" %}
+      Manually entered list
+      {% endif %}
+      {% if extractions[i]._instance_of_property == "stopwords" %}
+      Stopword list
+      {% endif %}
+      {% if extractions[i]._instance_of_property != "manual_entry" and extractions[i]._instance_of_property != "stopwords" %}
+      Instance of <strong>{{ extractions[i].get_name() }}</strong> (<a href="https://www.wikidata.org/wiki/{{ extractions[i]._instance_of_property }}"
+                                                      target="_blank">{{ extractions[i]._instance_of_property }}</a>)
+      {% endif %}
+      assign label <strong>{{ extractions[i].get_label() }}</strong>
+      {% if extractions[i].get_num_extracts() > -1 %}
+        ({{ extractions[i].get_num_extracts() }} entities found, <a href="{{ url_for('knowledge_base.download_extraction', extraction_identifier=extractions[i].get_identifier()) }}">Download</a>)
+      {% endif %}
+    </li>
+    <li id="extraction_{{ i }}_state_loading" class="list-group-item"  {% if extraction_states[i].value != "loading" %} style="display:none" {% endif %}>
+        Loading
+    </li>
+    <li id="extraction_{{ i }}_state_not_loaded" class="list-group-item" {% if extraction_states[i].value != "not_loaded" %} style="display:none" {% endif %}>
+        <button type="button" class="btn btn-secondary" onclick="on_click_load({{ i }}, '{{ extractions[i].get_identifier() }}')">Load</button>
+    </li>
+    <li id="extraction_{{ i }}_state_finished_loading" class="list-group-item" style="display:none">
+        Finished loading. <a href="#" onclick="location.reload(); return false;">Refresh</a> page to view.
+    </li>
+    <div id="extraction_{{ i }}_state_loaded" {% if extraction_states[i].value != "loaded" %} style="display:none" {% endif %}>
+      <li class="list-group-item">
+        Example names: 
+        {% for entity_name in example_extracts[i] %}
+          {{ entity_name.tokenized_name }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+      </li>
+      <!-- Hiding properties
+      <li id="extraction_{{ i }}_configuration_showlink" class="list-group-item">
+        <a onclick="on_click_show_configuration({{ i }})">Show configuration</a>
+      </li> -->
+      <li id="extraction_{{ i }}_configuration" class="list-group-item">
+        <!-- Configuration of Extraction -->
+        <form id="extraction_{{ i }}_configuration_form" method="POST" action="{{ url_for('knowledge_base.change_extraction_property', extraction_identifier=extractions[i].get_identifier()) }}">
+          <div class="form-row">
+            <div class="col-md-4">
+              <!-- Config: Active -->
+              <div class="form-check form-check-inline">
+              <input type="checkbox" class="form-check-input" name="active" value="true"
+                     onclick="on_click_make_submit_btn_visible({{ i }})"
+              {% if extractions[i]._properties["active"] %}
+                checked
+              {% endif %}
+              >
+              <label class="form-check-label">Active</label>
+              </div>
+              <!-- Config: Use aliases -->
+              <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" name="use_aliases" value="true"
+                       onclick="on_click_make_submit_btn_visible({{ i }})"
+                {% if extractions[i]._properties["use_aliases"] %}
+                  checked
+                {% endif %}
+                >
+                <label class="form-check-label">Use aliases</label>
+              </div>
+              <!-- Config: Split tokens -->
+              <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" name="split_tokens" value="true"
+                       onclick="on_click_make_submit_btn_visible({{ i }})"
+                {% if extractions[i]._properties["split_tokens"] %}
+                  checked
+                {% endif %}
+                >
+                <label class="form-check-label">Split tokens</label>
+              </div>
+               <!-- Config: Ignore Diacritics -->
+              <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" name="remove_diacritics" value="true"
+                       onclick="on_click_make_submit_btn_visible({{ i }})"
+                {% if extractions[i]._properties.get("remove_diacritics", False) %}
+                  checked
+                {% endif %}
+                >
+                <label class="form-check-label">Remove diacritics</label>
+              </div>
+            </div>
+            <!-- Config: Ignore letter case for matches -->
+            <div class="col-md-3">
+            <select class="form-control" name="match_casing" onclick="on_click_make_submit_btn_visible({{ i }})">
+              <option value="exact" {% if extractions[i].get_property("match_casing") == "exact" %} selected {% endif %} >Match letter case exact</option>
+              <option value="ignore_first_character" {% if extractions[i].get_property("match_casing") == "ignore_first_character" %} selected {% endif %} >Ignore case of first character</option>
+              <option value="ignore_all" {% if extractions[i].get_property("match_casing") == "ignore_all" %} selected {% endif %} >Ignore all letter case</option>
+              <option value="fuzzy" {% if extractions[i].get_property("match_casing") == "fuzzy" %} selected {% endif %} >Fuzzy Matching</option>
+            </select>
+            </div>
+            <!-- Config: Minimum length -->
+            <label class="col-md-2 col-form-label text-right">Min. character length:</label>
+            <div class="col-md-1">
+              <input type="text" class="form-control" name="minimum_length" value="{{ extractions[i].get_property('minimum_length') }}"
+                     onclick="on_click_make_submit_btn_visible({{ i }})">
+            </div>
+            <!-- Config: Priority -->
+            <label class="col-md-1 col-form-label text-right">Priority:</label>
+            <div class="col-md-1">
+              <input type="text" class="form-control" name="priority" value="{{ extractions[i].get_property('priority') }}"
+                     onclick="on_click_make_submit_btn_visible({{ i }})">
+            </div>
+          </div>
+          <div class="form-row pt-3">
+            <!-- Config: Filter string -->
+            <div class="col-md-7">
+              Filter strings (one per line, whitespace tokenized):
+              <textarea class="form-control" name="filter_list" rows="5" onclick="on_click_make_submit_btn_visible({{ i }})">{% for filter_item in extractions[i].get_property("filter_list") %}{% for filter_token in filter_item %}{{ filter_token }}{% if not loop.last %} {% endif %}{% endfor %}{% if not loop.last %}&#13;&#10;{% endif %}{% endfor %}</textarea>
+            </div>
+            <!-- Config: Label -->
+            <label class="col-md-2 col-form-label text-right">Label:</label>
+            <div class="col-md-1">
+              <input type="text" class="form-control" name="label" value="{{ extractions[i].get_label() }}"
+                     onclick="on_click_make_submit_btn_visible({{ i }})">
+            </div>
+            <!-- Help -->
+            <div class="col-md-2 text-right">
+              <a href="/help#fine-tuning" target="_blank"><button class="btn btn-outline-secondary" type="button">?</button></a>
+            </div>
+          </div>
+          <div id="submit_property_changes_feedback{{ i }}" style="display:none" class="text-danger">Submission Feedback</div>
+          <div>
+            <input type="submit" class="btn btn-success" value="Save changes"
+                   id="submit_property_changes_btn{{ i }}" 
+                   onclick="on_click_submit_form_ajax({{ i }})"
+                   style="display:none"> 
+          </div>
+        </form>
+      </li>
+    </div>
+  </ul>
+</div>
+
+{% endfor %}
+
+<div class="pb-5 pt-5">
+  <div id="extraction_x_state_not_loaded">
+    <div class="form-group row" >
+        <div class="col-5">
+          <button class="btn btn-secondary" onclick="on_click_load_all()">Load all</button> 
+          <button class="btn btn-secondary" onclick="on_click_unload_all()">Unload all</button>
+          extractions that match in the name
+        </div>
+        <div class="">
+          <input type="text" class="form-control" id="extraction_matching_string_field" name="extraction_matching_string">
+        </div>
+    </div>
+    <small class="form-text text-muted">E.g. <em>en</em> to load/unload all English extractions. Or <em>en-ORG</em> to load/unload all extractions that are in English and assign the ORG label.</small>
+  </div>
+  <p id="extraction_x_state_loading" style="display:none">
+    Loading
+  </p>
+  <p id="extraction_x_state_finished_loading" style="display:none">
+    Finished loading. <a href="#" onclick="location.reload(); return false;">Refresh</a> page to view.
+  </p>
+</div>
+
+
+<div class="pb-5">
+  <a href="{{ url_for('knowledge_base.extract_from_knowledge_base_form') }}">
+      <button class="btn btn-success">Add new extractions</button>
+  </a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-4.0.0.min.css') }}">
+    <script src="{{ url_for('static', filename='jquery-3.3.1.min.js') }}"></script>
+
+
+    <title>ANEA - {% block title %}{% endblock %}</title>
+
+  </head>
+  <body>    
+    <header>
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" href="/">ANEA</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item {% block nav_settings %}{% endblock %}">
+                <a class="nav-link" href="/settings">Settings</a>
+              </li>
+              <li class="nav-item {% block nav_knowledge_base %}{% endblock %}">
+                <a class="nav-link" href="/knowledge_base">Knowledge Base</a>
+              </li>
+              </li>
+              <li class="nav-item {% block nav_stopwords %}{% endblock %}">
+                <a class="nav-link" href="/stopwords/">Stopwords</a>
+              </li>
+              <li class="nav-item {% block nav_list_entry %}{% endblock %}">
+                <a class="nav-link" href="/list_entry/">List Entry</a>
+              </li>
+              <li class="nav-item {% block nav_extractions %}{% endblock %}">
+                <a class="nav-link" href="/knowledge_base/list_extracts">Extractions</a>
+              </li>
+              <li class="nav-item {% block nav_text_documents %}{% endblock %}">
+                <a class="nav-link" href="/text_input">Documents</a>
+              </li>
+              <li class="nav-item {% block nav_help %}{% endblock %}">
+                <a class="nav-link" href="/help">Help</a>
+              </li>
+
+            </ul>
+          </div>
+        </nav>
+        
+        <div class="container">
+            <div class="row">
+                <div class="mx-auto">
+                    {% block header %}{% endblock %}
+                </div>
+            </div> 
+        </div>   
+    </header>
+    
+    <main role="main" class="container">
+        <div class="container">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+        
+        <div class="container">
+            <div id="status_feedback" class="alert alert-warning" style="display:none">
+            </div>
+        </div>
+        
+        <div class="container">
+            <div id="status_error" class="alert alert-danger" style="display:none">
+                <button type="button" class="close" onclick="clear_status(); console.log('Done');">&times;</button>
+                <div id="status_error_text"></div>
+            </div>
+        </div>
+        
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    
+    </main>
+    
+    
+    <script src="{{ url_for('static', filename='bootstrap-4.0.0.bundle.min.js') }}"></script>
+
+    <script>
+        // Calls the server and checks the state of Status
+        // Used for processes that run in the background to see how far they are
+        function update_status() {
+            $.getJSON("{{ url_for('status.status') }}", function(result){
+                parse_status(result);
+            });
+        }
+        
+        // Act on the result of the state of Status
+        function parse_status(result) {
+            if(result["state"] == "idle"){ // nothing to report
+                $("#status_feedback").hide()
+                $("#status_error").hide()
+            } else if(result["state"] == "processing") { // during process of a task
+                $("#status_feedback").show()
+                $("#status_feedback").text("Task in progress. Do not perform any other action. " + result["message"])
+            } else if(result["state"] == "error") { // an error occured during a task
+                console.log(result["message"])
+                $("#status_error").show()
+                $("#status_error_text").text("An error occured during a task: " + result["message"])
+            }
+        }
+        update_status()
+        setInterval(update_status, 10 * 1000);
+        
+        // Call this function to remove the current status
+        // Used to clear error messages by the user
+        function clear_status() {
+            $.getJSON("{{ url_for('status.clear') }}", function(result){
+                parse_status(result);
+            });
+        }
+    </script>
+
+  </body>
+</html>

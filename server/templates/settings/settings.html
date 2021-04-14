@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block nav_settings %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Settings{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <div class="form-group">
+        <label for="wikidata_path_input"><strong>Path to Wikidata Dump File</strong></label>
+        <input type="text" class="form-control" id="wikidata_path_input" name="wikidata_path" value="{{ settings.wikidata_path }}">
+        <small class="form-text text-muted">The path on the server to the dump file of wikidata. The latest JSON dump can be downloaded <a href="https://dumps.wikimedia.org/wikidatawiki/entities/" target="_blank">here</a>. It needs to be extracted and placed on the server.</small>
+    </div>
+    
+    <div class="form-group">
+        <label for="tokenizer_language_input"><strong>Tokenizer Language Code</strong></label>
+        <input type="text" class="form-control" id="tokenizer_language_input" name="tokenizer_language" value="{{ settings.spacy_tokenizer_language_code }}">
+        <small class="form-text text-muted">The language code that specifies which tokenizer to use. 
+        Currently supported are: {{ supported_languages }}. The code 'whitespace' splits at whitespaces ' '. Before using any other tokenizer, 
+        the corresponding language pack or library needs to be installed. Please, 
+        see the <a href="/help#tokenizer" target="_blank">instructions</a>.</small>
+    </div>
+    
+    <div class="form-group">
+        <label><strong>Tokenization for Entity Names</strong></label><br />
+        <label class="radio"><input type="radio" name="language_specific_tokenizer_for_entity_names" value="false" {% if not settings.use_language_specific_tokenizer_for_entity_names %}checked{% endif %}>Whitespace</label>
+        <label class="radio pl-3"><input type="radio" name="language_specific_tokenizer_for_entity_names" value="true" {% if settings.use_language_specific_tokenizer_for_entity_names %}checked{% endif %}>Language Specific Tokenization</label>
+        <small class="form-text text-muted">Most entity names do not need complex tokenization and can just be split at the whitespace (" ").
+         In some cases you might need more complex tokenization, e.g. to split apart the ":" in "Star Wars: A New Hope" (if this was also done for the input text).
+         In these cases the same tokenizer can be used that also tokenizes the text (option above). Be aware that this is much slower 
+         than just splitting at whitespaces.</small>
+    </div>
+    
+    <div class="pb-3">
+        <strong>Lemmatization</strong>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="lemmatize" value="true"
+                  {% if settings.lemmatize %}
+                    checked
+                  {% endif %}
+                  >
+                  <label class="form-check-label">Lemmatize text input</label>
+        </div>
+        <small class="form-text text-muted">Lemmatizing the input text can help improve recall. 
+                  A lemmatizer for the same language as the tokenizer is used (see option above). 
+                  A lemmatization library needs to be installed,
+                  please see the <a href="/help#tokenizer" target="_blank">instructions</a> for the tokenizer.
+        </small>
+    </div>
+    
+    <div class="pb-3">
+        <strong>Diacritics</strong>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="remove_diacritics" value="true"
+                  {% if settings.remove_diacritics %}
+                    checked
+                  {% endif %}
+                  >
+                  <label class="form-check-label">Remove diacritics from text input</label>
+        </div>
+        <small class="form-text text-muted">Removes all diâçrítìcs from the input text.
+        </small>
+    </div>
+    <input type="submit" class="btn btn-success" value="Save">
+    
+  </form>  
+{% endblock %}

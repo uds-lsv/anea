@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block nav_text_documents %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Documents{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  {% for document_type, document in document_types_and_documents %}
+  <div class="card mb-2">
+    <div class="card-body">
+      <h5 class="card-title">
+        {{ document_type_to_readable_name(document_type) }}
+      </h5>
+      {% if document is not none %}
+        <p class="card-text">{{ document.tokens[:10] }} ...</p>
+      {% endif %}
+      <p>
+        <a href="{{ url_for('text_input.text_input_form', document_type=document_type) }}" class="card-link">Input a new document</a>
+        <a href="{{ url_for('text_input.text_upload_form', document_type=document_type) }}" class="card-link">Upload a new document</a>
+      </p>
+      {% if document is not none %}
+      <p>
+        <a href="{{ url_for('text_output.text_output_page', document_type=document_type) }}" class="card-link">See document</a>
+        <a href="{{ url_for('text_output.text_download', document_type=document_type) }}" class="card-link">Download document</a>
+      </p>
+      <p>
+        <a href="{{ url_for('autom_annotation.index', document_type=document_type) }}" class="card-link">Annotate</a>
+        {% if document.gold_labels is not none %}
+        <a href="{{ url_for('evaluation.evaluation', document_type=document_type) }}" class="card-link">Evaluate</a>
+        <a href="{{ url_for('evaluation.analysis', document_type=document_type, num_errors=50) }}" class="card-link">Analyse errors</a>
+        {% endif %}
+      </p>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endfor %}
+{% endblock %}
+
+

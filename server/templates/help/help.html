@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block nav_help %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Help{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="input-formats">Input Formats</h2>
+<p>
+The format <strong>Simple Text (tokenize)</strong> tokenizes the given text/uploaded text document. Given the input
+<pre><code>
+A visit to Washington Square Park.
+</code></pre>
+this might result in the tokens
+<pre><code>
+A
+visit
+to
+Washington
+Square
+Park
+.
+</code></pre>
+when using the English tokenizer. To prevent tokenization of special characters (like the full stop), 
+the tokenizer can be set to <em>whitespace</em> in the <a href="/settings/">settings</a>. Then, the tokenization
+is just performed at the spaces.
+</p>
+<p>
+The <strong>CoNLL format</strong> already expects tokenized text. Each line contains one token. Labels can be specified
+by writing them in the same line, separated by either a space (' ') or a tab ('\t'). An example is
+<pre><code>
+A O
+visit O 
+to O
+Washington LOC
+Square LOC
+Park LOC
+. O
+</code></pre>
+Following the common format, only the last label specified in a line is used. This means that inputting the following
+would give the same result.
+<pre><code>
+A TAG1 O
+visit TAG2 O 
+to TAG3 O
+Washington TAG4 LOC
+Square TAG5 LOC
+Park TAG6 LOC
+. TAG7 O
+</code></pre>
+</p>
+
+<h2 id="fine-tuning">Fine-Tuning Options</h2>
+
+<p>
+The fine-tuning options allow configuring each extraction separately. The following options are possible
+
+<ul>
+<li><strong>Active</strong>: If this box is checked, the entity names in this extraction will be used for the automatic matching. Otherwise, they will be ignored.</li>
+<li><strong>Use alias</strong>: Entities in Wikidata might not only have a main name but also several alternative names. These can be e.g. abbreviations like in "Association for Computational Linguistics" -> "ACL". Checking this box will also use these alias names.</li>
+<li><strong>Split tokens</strong>: Names can consist of several tokens (e.g. "Tom Sawyer"). Checking this box will use each token as its own name, additionally to the full name. For the example, this means that "Tom", "Sawyer" and "Tom Sawyer" will be used.</li>
+<li><strong>Letter Case and Matching</strong>: When matching tokens from the text with the names in the extractions, the upper- and lowercase can
+be taken into account. "Match letter case exact" will only match a name and a sequence of tokens from the text if they
+ have exactly the same case. "Ignore case of first character" will ignore the letter case of the first character (e.g. for lowercased names 
+ that appear at the beginning of a sentence in some languages). "Ignore all letter case" will ignore the case during the 
+ matching, i.e. "tEst" and "TEsT" will match. These settings can increase recall but might decrease precision because e.g. letter case is an 
+ important indicator for names in many languages.</li>
+<li><strong>Minimum character length</strong>: This setting allows to ignore all the names from the extraction that have less characters than specified.</li>
+<li><strong>Priority</strong>: If names from different extractions match the same token, the extraction with the higher priority will be used. After the matching process, the conflicts can be inspected when looking at the document ("See document").</li>
+<li><strong>Label</strong>: This allows to change the label that is used if a match with one of the extraction's names is found.</li>
+<li><strong>Filter</strong>: Names added to this list will be ignored during the matching. This allows removing names that create many false positives (e.g. the name "June" that is also a month).</li>
+</ul> 
+
+The content of each extraction can be downloaded. The downloaded extraction will have all configurations applied on. This allows to manually inspect the effects of the configurations if there is the need for it.
+</p>
+
+<h2 id="tokenizer">Tokenization and Lemmatization</h2>
+
+<p>
+Tokenization and lemmatization are performed using external libraries. 
+Whitespace tokenization just splits all words at the
+whitespace " ". Lemmatization is not possible in this setting.
+</p>
+<p>
+For many languages, there exists a Spacy language pack. Currently, Spacy supports English (en), German (de), French (fr), Spanish (es), Portuguese (pt), Italian (it), Dutch (nl), Greek (el) and Multi-language (xx). Estonian is supported via EstNLTK. All these libraries and
+languages packs need to be installed before they can be used. Please see the installation instructions for more information.
+</p>
+
+<h2 id="extraction-specification-format">Extraction Upload Format</h2>
+
+Instead of entering the Wikidata categories via the form, they can also be uploaded from a text file in a bulk. The format is the following:
+
+<pre><code>
+  # Sample Specification 
+  # Identifier \t Language Code \t Label
+
+  # Person in Estonian
+  Q5	et	PER 
+
+  # Different locations in English
+  Q515	en	LOC
+  Q5107	en	LOC
+  Q6256	en	LOC
+  Q82794	en	LOC
+</code></pre>
+
+<h2 id="category-subclasses">Category Subclasses</h2>
+
+Some entities in the Wikidata graph might be categorized in very specific subclasses. E.g. some Estonian cities are categorized as/are instance of "Type of settlement in Estonia" (Q11881845) which is a subcategory of "Human settlement" (Q486972). Setting the subclass depth during the extraction to a value larger than 0 allows to also consider these subcategories in the extraction process.
+
+<h2 id="stopwords">Stopwords</h2>
+
+<p>
+The stopwords are obtained from <a href="https://github.com/stopwords-iso/stopwords-iso">Stopwords ISO</a>, licensed under <a href="https://github.com/stopwords-iso/stopwords-iso/blob/master/LICENSE">MIT License</a>. The sources of the specific lists are listed <a href="https://github.com/stopwords-iso/stopwords-iso/blob/master/CREDITS.md">here</a>.
+</p>
+
+{% endblock %}

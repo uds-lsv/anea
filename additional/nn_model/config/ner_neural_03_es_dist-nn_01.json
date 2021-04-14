@@ -1,0 +1,21 @@
+{
+   "NAME": "ner_neural_03_es_dist-nn_01",
+   "PATH_TRAIN": "../data/spanish/spanish_labeled_first1000.txt",
+   "PATH_TRAIN_DISTANT": "../data/spanish/autom_annotate_nn/spanish_unlabeled_autom-ann-nn",
+   "PATH_DEV": "../data/spanish/spanish_labeled_after-first1000-500.txt",
+   "PATH_TEST": "../data/spanish/spanish_test2_a+b.txt",
+   "DATA_SEPARATOR": "\t",
+   "LABEL_MAP": {"O": 0, "B-MOVIE": 1, "I-MOVIE": 2},
+   "EMBEDDING": "fasttext-cc-es",
+   "CONTEXT_LENGTH": 1,
+   "RNN_TYPE": "GRU",
+   "RNN_SIZE": 300,
+   "DENSE_SIZE": 100,
+   "DENSE_ACTIVATION": "relu",
+   "DROPOUT_1": 0.2,
+   "DROPOUT_2": 0.2,
+   "DROPOUT_3": 0.2,
+   "BATCH_SIZE": 50,
+   "EPOCHS": 50,
+   "USE_NOISY": true
+}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Startpage{% endblock %}
+
+{% block header %}
+  <h1 class="text-center">ANEA</h1>
+  <h2 class="text-center">Automatic Named Entity Annotation for Many Types and Languages</h2>
+{% endblock %}
+
+{% block content %}
+
+Usually, you might want to start with <a href="/knowledge_base/extract_form">extracting</a> lists of names from the knowledgebase.
+Alternatively, you can manually <a href="/list_entry/list_entry_form">add</a> a list of names. For this demo, we have
+already prepared two extractions which you can <a href="/knowledge_base/list_extracts">inspect and fine-tune</a>. The 
+<a href="http://localhost:5100/text_input/document_types">Documents</a> page allows you to upload labeled and unlabeled
+text, automatically annotate it and then evaluate and analyse the annotation.
+
+<div class="row pt-5">
+  <div class="col-md-4">
+  </div>
+  <div class="col-md-1">
+    <img src="static/img/lsv-logo_no-background_mid-res.png" class="img-fluid">
+  </div>
+  <div class="col-md-1">
+    <img src="static/img/uds-eule.png" class="img-fluid">
+  </div>
+  <div class="col-md-3" style="display: flex; align-items: center;">
+    <img src="static/img/sic_logo.png" class="img-fluid">
+  </div>
+</div>
+
+{% endblock %}

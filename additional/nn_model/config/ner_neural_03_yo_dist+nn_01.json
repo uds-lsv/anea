@@ -1,0 +1,21 @@
+{
+   "NAME": "ner_neural_03_yo_dist+nn_01",
+   "PATH_TRAIN": "../data/yoruba/train_first1500_no-date.tsv",
+   "PATH_TRAIN_DISTANT": "../data/yoruba/autom_annotated_nn/train_last18k_autom-ann-nn",
+   "PATH_DEV": "../data/yoruba/train_after-first1000-500_no-date.tsv",
+   "PATH_TEST": "../data/yoruba/test_no-space_no-date.tsv",
+   "DATA_SEPARATOR": "\t",
+   "LABEL_MAP": {"O": 0, "B-PER": 1, "I-PER": 2, "B-ORG": 3, "I-ORG": 4, "B-LOC": 5, "I-LOC": 6},
+   "EMBEDDING": "fasttext-cc-yo",
+   "CONTEXT_LENGTH": 1,
+   "RNN_TYPE": "GRU",
+   "RNN_SIZE": 300,
+   "DENSE_SIZE": 100,
+   "DENSE_ACTIVATION": "relu",
+   "DROPOUT_1": 0.2,
+   "DROPOUT_2": 0.2,
+   "DROPOUT_3": 0.2,
+   "BATCH_SIZE": 50,
+   "EPOCHS": 50,
+   "USE_NOISY": true
+}

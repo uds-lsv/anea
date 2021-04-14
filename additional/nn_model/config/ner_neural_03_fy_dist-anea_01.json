@@ -1,0 +1,21 @@
+{
+   "NAME": "ner_neural_03_fy_dist-anea_01",
+   "PATH_TRAIN": "../data/wikiann_fy/wikiann-fy_first1000.conll",
+   "PATH_TRAIN_DISTANT": "../data/wikiann_fy/autom_annotated/wikiann-fy_before-last-10k-70k_autom-annotated_round04.conll",
+   "PATH_DEV": "../data/wikiann_fy/wikiann-fy_afterfirst1000_500.conll",
+   "PATH_TEST": "../data/wikiann_fy/wikiann-fy_last10000.conll",
+   "DATA_SEPARATOR": "\t",
+   "LABEL_MAP": {"O": 0, "B-PER": 1, "I-PER": 2, "B-ORG": 3, "I-ORG": 4, "B-LOC": 5, "I-LOC": 6},
+   "EMBEDDING": "fasttext-cc-fy",
+   "CONTEXT_LENGTH": 1,
+   "RNN_TYPE": "GRU",
+   "RNN_SIZE": 300,
+   "DENSE_SIZE": 100,
+   "DENSE_ACTIVATION": "relu",
+   "DROPOUT_1": 0.2,
+   "DROPOUT_2": 0.2,
+   "DROPOUT_3": 0.2,
+   "BATCH_SIZE": 50,
+   "EPOCHS": 50,
+   "USE_NOISY": true
+}

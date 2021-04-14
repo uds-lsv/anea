@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block nav_text_documents %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Document "{{ document_type_to_readable_name(document_type) }}" {% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+	<div>
+		<p>
+		Individual, automatically assigned labels can be manually changed by
+		clicking on them.
+		</p>
+	</div>
+	
+    <div id="autom_annotation_result">
+      <table id="annotated_text_table" class="table table-striped table-hover">
+        <tr>
+          <th>Token</th>
+          {% if gold_labels is not none %}
+          <th>Gold Label</th>
+          {% endif %}
+          {% if autom_labels is not none %}
+          <th>Autom Label</th>
+          {% endif %}
+          {% if match_output is not none %}
+          <th>Matches</th>
+          {% endif %}
+          {% if other_match_output is not none %}
+          <th>Other Matches (not picked)</th>
+          {% endif %}
+        </tr>
+        {% for i in range(tokens | length) %}
+        <tr>
+          <td>{{ tokens[i] }}</td>
+          {% if gold_labels is not none %}
+          <td>{{ gold_labels[i] }}</td>
+          {% endif %}
+          {% if autom_labels is not none %}
+          <td id="cell_autom_label_{{ i }}"> <div onclick="show_field_to_change_autom_label_value({{ i }}, '{{ autom_labels[i] }}');">{{ autom_labels[i] }} </div></td>
+          {% endif %}
+          {% if match_output is not none %}
+          <td>
+            {% if match_output[i] is not none %}
+              {% if match_output[i][2] != "Manual Entry" and match_output[i][2] != "Stopwords" %}
+                <a href="https://www.wikidata.org/wiki/{{ match_output[i][2] }}" target="_blank">{{ match_output[i][0] }}</a>
+              {% else %}
+                {{ match_output[i][0] }}
+              {% endif %}
+              ({{ match_output[i][3] }})
+            {% endif %}
+          </td>
+          {% endif %}
+          {% if other_match_output is not none %}
+          <td>
+          {% for match in other_match_output[i] %}
+            {% if match[2] != "Manual Entry" %}
+              <a href="https://www.wikidata.org/wiki/{{ match[2] }}" target="_blank">{{ match[0] }}</a>
+            {% else %}
+              {{ match[0] }}
+            {% endif %}
+            ({{ match[1] }}, {{ match[3] }}){% if not loop.last %},{% endif %}
+          {% endfor %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  
+    {% if autom_labels is none %}
+    <a href="{{ url_for('autom_annotation.index', document_type=document_type) }}">
+      <button class="btn btn-success">Annotate</button>
+    </a>
+    {% endif %}
+    {% if autom_labels is not none and gold_labels is not none %}
+    <a href="{{ url_for('evaluation.evaluation', document_type=document_type) }}">
+      <button class="btn btn-success">Evaluate</button>
+    </a>
+      <a href="{{ url_for('evaluation.analysis', document_type=document_type, num_errors=50) }}">
+      <button class="btn btn-success">Analyse errors</button>
+    </a>
+    {% endif %}
+ 
+<script>
+	// Function to manually change an (automatically assigned) label
+	// Displays a text input field instead of the label value
+	// The user can change the label and then press enter to send
+	// the update to the server. Alternatively, the user can click
+	// on a button to change this label or all token-label occurences
+	// in this document
+	function show_field_to_change_autom_label_value(cell_i, current_cell_value) {
+		// create a new text input field
+		var cell = $("#cell_autom_label_" + cell_i);
+		var input_field = document.createElement("input");
+		input_field.type = "text";
+		input_field.size = 10;
+		input_field.value = current_cell_value;
+		// add listener that will save change when enter key pressed
+		input_field.addEventListener("keyup", function(event) {
+			if (event.key === "Enter") {
+				change_autom_label_one_value(cell, cell_i, input_field.value); // send update to server
+			}	
+		});
+		cell.html(input_field);
+		input_field.focus(); // focus keyboard on this new field to allow direct editing
+		
+		// instead of pressing enter, also a button can be used
+		var button_change_this = document.createElement("input");
+		button_change_this.type = "button";
+		button_change_this.className = "btn btn-primary ml-1";
+		button_change_this.value = "Change this";
+		button_change_this.addEventListener("click", function() { change_autom_label_one_value(cell, cell_i, input_field.value); });
+		cell.append(button_change_this);
+
+		// alternatively, to just changing this token label, also allows to change all
+		// cells that have the same token and label
+		var button_change_all = button_change_this.cloneNode(true);
+		button_change_all.value = "Change all";
+		button_change_all.addEventListener("click", function() { change_autom_label_all_values(cell, cell_i, input_field.value); });
+		cell.append(button_change_all);
+	}
+	
+	// Just changing the label of one specific cell
+	function change_autom_label_one_value(cell, token_index, new_label) {
+		$.post("{{ url_for('post_editing.manually_change_one_autom_label_json', document_type=document_type) }}",
+				{token_index: token_index, new_label: new_label});
+		// remove text input field and display the new value
+		cell.html("<div onclick=\"show_field_to_change_autom_label_value(" + token_index + 
+				  ", '" + new_label + "');\">" + new_label + "</div>"); 
+	}
+	
+	// Changing all occurences of this combination of token and label
+	// Reloads page afterwards
+	function change_autom_label_all_values(cell, token_index, new_label) {
+		$.post({url: "{{ url_for('post_editing.manually_change_all_autom_label_for_one_token_json', document_type=document_type) }}",
+				data: {token_index: token_index, new_label: new_label},
+				success: function() {location.reload()} });
+	}
+</script>
+ 
+{% endblock %}
+		`
+
+

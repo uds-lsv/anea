@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block nav_knowledge_base %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Extract Names from Knowledge Base{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<style>
+#wis_overlay {
+  position: fixed;
+  display: none;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 2;
+  cursor: pointer;
+}
+
+#wis_overlay_text{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: black;
+  padding: 5px;
+  background-color: white;
+  transform: translate(-50%,-50%);
+  -ms-transform: translate(-50%,-50%);
+}
+</style>
+
+  <div>
+    <button class="btn btn-success mb-3" onclick="wis_overlay_on()">Search Wikidata identifier</button>
+  </div>
+  
+  <form>
+  
+  </form>
+  <form method="POST" action="{{ url_for('knowledge_base.extract_from_knowledge_base') }}">
+    <div id="rule_input">
+    <div class="row">
+        <div class="col-4">
+          Map names of instances of
+          <small class="form-text text-muted">A <a href="https://www.wikidata.org" target="_blank">Wikidata</a> identifier of a category, e.g. Q5 for "person"</small>
+        </div>
+        <div class="col">
+          in language
+          <small class="form-text text-muted">A Wikidata language code, e.g. en</small>
+        </div>
+        <div class="col-3">
+          to named entity label
+          <small class="form-text text-muted">The label to use, e.g. PER</small>
+        </div>
+        <div class="col-2">
+          using subclass depth
+          <small class="form-text text-muted">(<a href="/help#category-subclasses">more info</a>)</small> 
+        </div>
+      </div>
+      <!-- Input fields are added via Javascript -->
+    </div>
+    <div class="clearfix pt-3">
+      <input type="button" class="btn btn-success" onClick="add_rule_input()" value="+ Rule">
+    </div>
+    <div class="clearfix">
+      <p class="pt-3">
+      You can add rules with the form above or you can upload a file with rule definitions below. See the <a href="/help#extraction-specification-format" target="_blank">instructions</a> for more information on the format.
+      </p>
+      <input type="file" class="form-control-file" id="rule_file">
+      <p class="pt-3">
+      <!-- placeholder -->
+      </p>
+    </div>
+    <div class="clearfix">
+      <p class="pt-3">
+      The retrieval run through the Wikidata dump takes a while. First define 
+      all the rules above and then start the retrieval for extracting the rules
+      in parallel.
+      </p>
+      <input type="submit" class="btn btn-success" id="retrieve_from_kb" value="Retrieve from Wikidata">
+    </div>
+  </form>
+</div>
+
+<div id="wis_overlay">
+  <div id="wis_overlay_text">
+    Search Wikidata for entity categories
+    <form>
+      <div class="row">
+        <div class="col-6">
+          Category name
+          <small class="form-text text-muted">e.g. person or city (case-sensitive)</small>
+        </div>
+        <div class="col-6">
+          in language
+          <small class="form-text text-muted">A Wikidata language code, e.g. en</small>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-6">
+          <input id="wis_search_category_name_input" type="text" class="form-control">
+        </div>
+        <div class="col-3">
+          <input id="wis_search_language_input" type="text" class="form-control">
+        </div>
+      </div>
+      <div class="row ml-1 mt-1">
+        <button id="wis_search_button" type="button" class="btn btn-success" onclick="wis_search_api()">Search</button>
+      </div>
+    </form>
+    <div id="wis_answer_table_div" style="display:none; max-height: 400px; overflow:scroll;">
+      <table id="wis_answer_table" class="table mt-3">
+        <thead>
+          <tr><th>Identifier</th><th>Description</th><th>Action</th></tr>
+        </thead>
+        <tbody><!-- Empty, filled by JavaScript --></tbody>
+      </table>
+    </div>
+    </div>
+  </div>
+</div>
+  
+  <script>
+  rule_input_counter = 0
+  function add_rule_input(){
+    $("#rule_input").append('\
+      <div class="row pb-1"> \
+          <div class="col-4"> \
+            <input type="text" id="instance_of_property' + rule_input_counter + '" name="instance_of_property' + rule_input_counter + '" class="form-control"> \
+          </div> \
+          <div class="col"> \
+            <input type="text" id="language_code' + rule_input_counter + '"name="language_code' + rule_input_counter + '" class="form-control"> \
+          </div> \
+          <div class="col-3"> \
+            <input type="text" id="label' + rule_input_counter + '"name="label' + rule_input_counter + '" class="form-control"> \
+          </div> \
+          <div class="col-2"> \
+            <input type="text" id="depth' + rule_input_counter + '"name="depth' + rule_input_counter + '" placeholder=0  class="form-control"> \
+          </div> \
+        </div>')
+    rule_input_counter += 1
+  }
+  add_rule_input()
+  
+  function fill_last_rule_form(identifier, depth, language_code, label) {
+      $("#instance_of_property"+(rule_input_counter-1)).val(identifier)
+      //$("#depth"+(rule_input_counter-1)).val(depth)
+      $("#language_code"+(rule_input_counter-1)).val(language_code)
+      $("#label"+(rule_input_counter-1)).val(label)
+  }
+
+  function handleFileSelect(evt) {
+    // read the first given file
+    var f = evt.target.files[0] 
+    var r = new FileReader();
+    r.onload = function(e) { add_rules(e.target.result) }
+    r.readAsText(f);
+    $("#rule_file").val("");
+  }
+
+  function add_rules(text) {
+    rules = []
+    var i;
+    var lines = text.split('\n')
+    for (i = 0; i < lines.length; i++) { 
+      line = lines[i]
+      // remove duplicate/leading/trailing whitespaces
+      line = line.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ')
+      if (line.startsWith('#') || line.length == 0) {  
+        // skip comments and empty lines
+        continue
+      }
+      items = line.split(' ')            
+      switch (items.length) {
+          case 3:  
+              // contains Identifier, Language, Label
+              rules.push([items[0], 0, items[1], items[2]])
+              break;
+          case 4:  
+              // either Identifier, Language, Label, Comment
+              // or Identifier, Depth, Language, Label
+              if (items[3].startsWith('#')) {
+                  rules.push([items[0], 0, items[1], items[2]])
+              } else {
+                  rules.push([items[0], items[1], items[2], items[3]])
+              }
+              break;
+          case 5:  
+              // contains Identifier, Depth, Language, Label Comment
+              rules.push([items[0], items[1], items[2], items[3]])
+              break;
+          default: 
+              alert("Uploading rules failed because there is a malformed line in the rule file:\n" + line);
+              return;
+      }
+    }
+    if ($("#label"+(rule_input_counter-1)).val() != '') { add_rule_input(); }
+    for (i = 0; i < rules.length; i++) { 
+      //TODO Refactor, merge with fill_rule_form()
+      rule = rules[i]
+      $("#instance_of_property"+(rule_input_counter-1)).val(rule[0])
+      $("#depth"+(rule_input_counter-1)).val(rule[1])
+      $("#language_code"+(rule_input_counter-1)).val(rule[2])
+      $("#label"+(rule_input_counter-1)).val(rule[3])
+      if (i != rules.length-1) { add_rule_input(); }
+    }
+  }
+
+  rule_file = document.getElementById('rule_file')
+  rule_file.value = ""
+  rule_file.addEventListener('change', handleFileSelect, once=false);
+  </script>
+  
+    <script>
+        /* Wikidata Identifier Search (WIS) 
+           Scripts for the entity label and identifier search using
+           the Wikidata API.
+        */
+        function wis_overlay_on() {
+          document.getElementById("wis_overlay").style.display = "block";
+        }
+
+        function wis_overlay_off() {
+          document.getElementById("wis_overlay").style.display = "none";
+        }
+        
+        function wis_search_api() {
+          var category_name = $("#wis_search_category_name_input").val();
+          var language = $("#wis_search_language_input").val();
+          
+          console.log(category_name.length);
+          console.log(language.length);
+          
+          if (category_name.length == 0 || language.length == 0) {
+            alert("Please, fill out the category name and the language code.");
+            return;
+          }
+          
+          // Sparql query to the Wikidata Query Service
+          // Gets all entries that have as label or alternative label (alias)
+          // the given category in the given language code (e.g. en).
+          // Only displays items that have a description which filters
+          // some rubish.
+          var wikidata_query = 'SELECT DISTINCT ?item ?label ?itemDescription WHERE { \
+  ?item rdfs:label|skos:altLabel "' + category_name + '"@' + language + '. \
+  ?article schema:about ?item;\
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 10'
+          $.ajax({url: "https://query.wikidata.org/sparql",
+                  dataType: "json",
+                  data: {"query": wikidata_query}
+                  }).done(function(data) {
+                    parsed_results = wis_parse_answer(data);
+                    wis_display_query_results(parsed_results, category_name, language);
+                  }).fail(function(data, error_type) {
+                    alert("Search failed (Error type: " + error_type + "). You can manually search for categories on <a href='https://www.wikidata.org' target='_blank'>Wikidata</a>");
+                  }).always(function() {
+                    $("#wis_search_button").html("Search").attr("disabled", false);
+                  });
+          $("#wis_search_button").html("Searching").attr("disabled", true);
+        }
+        
+        // parses the answer given by the Wikidata Query Service in json format
+        function wis_parse_answer(data) {
+          var parsed_results = [];
+          data["results"]["bindings"].forEach( function(entry) {
+            uri = entry.item.value;
+            identifier = uri.split("/");
+            identifier = identifier[identifier.length -1];
+            if (typeof entry.itemDescription !== "undefined") {
+              description = entry.itemDescription.value;
+            } else {
+              description = "";
+            }
+            parsed_results.push({"identifier": identifier, "uri": uri, "description": description});
+          });
+          return parsed_results;
+        }
+        
+        // displays the parsed answer given by the Wikidata Query Service
+        // in a table
+        function wis_display_query_results(results, category_name, language_code) {
+          $("#wis_answer_table > tbody").html("") // empty old results
+          $("#wis_answer_table_div").show();
+          results.forEach( function(entry) {
+            $("#wis_answer_table > tbody").append("<tr><td>" + 
+                "<a href='" + entry["uri"] + "' target='_blank'>" 
+                + entry["identifier"] + "</a></td><td>" + entry["description"] + 
+                "</td><td><a href='#' onclick=\"wis_add_rule('" + 
+                entry["identifier"] + "', '" + category_name + "', '" + language_code + "');\">Add</a></td></tr>");
+          });
+        }
+        
+        function wis_add_rule(identifier, category_name, language_code) {
+          //TODO This adds user entered text (language code) to the DOM,
+          // should make sure that this is a valid language code to avoid
+          // injection of code, etc.
+          fill_last_rule_form(identifier, 0, language_code, category_name.toUpperCase());
+          add_rule_input();
+          wis_overlay_off();
+        }
+        
+        $(function() {
+            $('#wis_overlay_text').on('click', function(event){
+            // stop the event bubbling up to the parent (to prevent
+            // the overlay from closing when the form is used
+            event.stopPropagation();
+            });
+            $('#wis_overlay').on('click', function(event){
+            wis_overlay_off();
+            });
+        });
+    </script>
+
+{% endblock %}
+
+

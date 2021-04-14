@@ -1,0 +1,20 @@
+{
+   "NAME": "ner_neural_03_et_01",
+   "PATH_TRAIN": "../data/estonian/estner_first1000.cnll",
+   "PATH_DEV": "../data/estonian/estner_after-first1000-500.cnll",
+   "PATH_TEST": "../data/estonian/estner_last10000.conll",
+   "DATA_SEPARATOR": "\t",
+   "LABEL_MAP": {"O": 0, "B-PER": 1, "I-PER": 2, "B-ORG": 3, "I-ORG": 4, "B-LOC": 5, "I-LOC": 6},
+   "EMBEDDING": "fasttext-cc-et",
+   "CONTEXT_LENGTH": 1,
+   "RNN_TYPE": "GRU",
+   "RNN_SIZE": 300,
+   "DENSE_SIZE": 100,
+   "DENSE_ACTIVATION": "relu",
+   "DROPOUT_1": 0.2,
+   "DROPOUT_2": 0.2,
+   "DROPOUT_3": 0.2,
+   "BATCH_SIZE": 50,
+   "EPOCHS": 50,
+   "USE_NOISY": false
+}

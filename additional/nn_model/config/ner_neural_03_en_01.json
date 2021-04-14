@@ -1,0 +1,20 @@
+{
+   "NAME": "ner_neural_03_en_01",
+   "PATH_TRAIN": "../data/conll_en/eng.bio2.train.first1000_no-MISC",
+   "PATH_DEV": "../data/conll_en/eng.bio2.train.after-first-1000_500_no-MISC",
+   "PATH_TEST": "../data/conll_en/eng.bio2.testb_no-MISC",
+   "DATA_SEPARATOR": " ",
+   "LABEL_MAP": {"O": 0, "B-PER": 1, "I-PER": 2, "B-ORG": 3, "I-ORG": 4, "B-LOC": 5, "I-LOC": 6},
+   "EMBEDDING": "fasttext-cc-en",
+   "CONTEXT_LENGTH": 1,
+   "RNN_TYPE": "GRU",
+   "RNN_SIZE": 300,
+   "DENSE_SIZE": 100,
+   "DENSE_ACTIVATION": "relu",
+   "DROPOUT_1": 0.2,
+   "DROPOUT_2": 0.2,
+   "DROPOUT_3": 0.2,
+   "BATCH_SIZE": 50,
+   "EPOCHS": 50,
+   "USE_NOISY": false
+}

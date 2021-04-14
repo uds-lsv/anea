@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block nav_text_documents %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Uploaded text{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  {% if tokenized_text %}
+    <p>
+    Currently uploaded and tokenized text:
+    </p>
+    <div class="card">
+      <div class="card-body text-monospace">
+        <div class="card-text">
+          {% for token in tokenized_text %}
+              {{ token }}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p>No text uploaded, yet.</p>
+  {% endif %}
+  <div class="float-right pt-3">
+    <a href="{{ url_for('text_input.text_input_form', document_type=document_type) }}">
+      <button type="button" class="btn">Upload new text</button>
+    </a>
+    {% if document_type.value == "unlabeled_input" %}
+    <a href="{{ url_for('autom_annotation.index') }}">
+      <button type="button" class="btn btn-success">Annotate Text</button>
+    </a>
+    {% elif document_type.value == "test" %}
+    <a href="{{ url_for('evaluation.index') }}">
+      <button type="button" class="btn btn-success">Run Evaluation</button>
+    </a>
+    {% endif %}
+  </div>
+{% endblock %}
+
+

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block nav_list_entry %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Manual List Entry{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <div class="pb-2">
+      <label for="text_input">Map all matches with</label>
+      <textarea class="form-control" rows="10" name="manual_list"></textarea>
+      <small class="form-text text-muted">A list of names for entities. One entity per line. Entities with multiple tokens whitespace separated.</small>
+    </div>
+    
+    <div class="pb-2">
+      which are in language
+      <input type="text" name="language_code" class="form-control">
+      <small class="form-text text-muted">A language code, e.g. en</small>
+    </div>
+    <div class="pb-2">
+      to named entity label
+      <input type="text" name="label" class="form-control">
+      <small class="form-text text-muted">The label to use, e.g. PER</small>
+    </div>
+    
+    <input type="submit" class="btn btn-success" value="Input">
+  </form>  
+{% endblock %}

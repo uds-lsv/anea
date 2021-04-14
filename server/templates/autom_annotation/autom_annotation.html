@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block nav_text_documents %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Automatic Annotation{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+    <script>
+        function start_autom_annotation() {
+            // Start request to background annotation process
+            $.getJSON("{{ url_for('autom_annotation.autom_annotate_json', document_type=document_type) }}", function(result){
+                if(result["successful"]){
+                    window.location.href = "{{ url_for('text_output.text_output_page', document_type=document_type) }}";
+                } else {
+                    $("#result_error").append("<br />Error message: " + result["error_msg"]);
+                    $("#result_error").append("<br />Stacktrace: " + result["stacktrace"]);
+                    $("#result_error").show();
+                    $("#process_running").hide();
+                    $("#start_process_div").show();
+                }
+            });
+            $("#start_process_div").hide();
+            $("#process_running").show();
+        }
+    </script>
+
+    <div id="result_error" class="alert alert-danger" style="display:none">
+        Automatic annotation failed.             
+    </div>
+
+    <div id="start_process_div">
+        <p>
+            If the text is long and many possible entities need to be checked, 
+            this can take a while. The annotation process runs in the background 
+            once you click on the button below. Once the process is finished,
+            this page will be automatically updated.
+        </p>
+        <button class="btn btn-success" onclick="start_autom_annotation()">Start Automatic Annotation</button>
+    </div>
+    
+    <div id="process_running" style="display:none">
+        Automatic annotation is in progress.
+    </div>
+
+{% endblock %}
+
+

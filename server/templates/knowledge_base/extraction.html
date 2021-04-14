@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block nav_knowledge_base %}active{% endblock %}
+
+{% block header %}
+  <h1>{% block title %}Knowledge Base Retrieval{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+    <div id="please_wait" class="alert alert-warning">
+    Retrieving the rules from the Wikidata dump. If the full dump is
+    used, this can take several hours. This page will automatically 
+    update once the retrieval is finished. Do not reload or refresh 
+    this page. Retrieval started at {{ time_retrieval_start }}.
+    </div>
+    
+    <div id="result_successful" class="alert alert-success" style="display:none">
+        Extraction was successful. <a href="{{ url_for('knowledge_base.list_extracts') }}">Show</a>.
+    </div>
+    
+    <div id="result_error" class="alert alert-danger" style="display:none">
+        Extraction failed. <a href="{{ url_for('knowledge_base.extract_from_knowledge_base_form') }}">Try again</a>.
+    </div>
+    
+    <script>
+    $.getJSON("{{ url_for('knowledge_base.extract_from_knowledge_base_json') }}", function(result){
+        if(result["successful"]){
+            $('#result_successful').show();
+        } else {
+            $('#result_error').append("Error message: " + result["error_msg"]);
+            $('#result_error').show();
+        }
+        $("#please_wait").hide();
+    });
+    </script>
+
+{% endblock %}
