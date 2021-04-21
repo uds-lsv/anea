@@ -2,7 +2,7 @@
 
 ANEA is a tool to automatically annotate named entities in unlabeled text based on entity lists for the use as distant supervision.
 
-An example of the workflow can be seen in this [video](https://www.youtube.com/watch?v=eXwho2Pq6Eg). For the additional material regarding the COLING Demo Track submission, please check the subdirectory *additional* of this repository.
+An example of the workflow can be seen in this [video](https://www.youtube.com/watch?v=eXwho2Pq6Eg). For the additional material of the PML4DC paper, please check the subdirectory *additional* of this repository.
 
 
 ## Installation
