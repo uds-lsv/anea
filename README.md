@@ -1,6 +1,8 @@
-# ANEA
+# ANEA: Distant Supervision for Low-Resource Named Entity Recognition
 
 ANEA is a tool to automatically annotate named entities in unlabeled text based on entity lists for the use as distant supervision.
+
+Distant supervision allows obtaining labeled training corpora for low-resource settings where only limited hand-annotated data exists. However, to be used effectively, the distant supervision must be easy to gather. ANEA is a tool to automatically annotate named entities in texts based on entity lists. It spans the whole pipeline from obtaining the lists to analyzing the errors of the distant supervision. A tuning step allows the user to improve the automatic annotation with their linguistic insights without labelling or checking all tokens manually.
 
 An example of the workflow can be seen in this [video](https://www.youtube.com/watch?v=eXwho2Pq6Eg). For more details, take a look at our [paper](https://arxiv.org/abs/2102.13129) (accepted at PML4DC @ ICLR'21). For the additional material of the paper, please check the subdirectory *additional* of this repository.
 
