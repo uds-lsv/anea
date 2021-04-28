@@ -2,7 +2,7 @@
 
 ANEA is a tool to automatically annotate named entities in unlabeled text based on entity lists for the use as distant supervision.
 
-An example of the workflow can be seen in this [video](https://www.youtube.com/watch?v=eXwho2Pq6Eg). For the additional material of the PML4DC paper, please check the subdirectory *additional* of this repository.
+An example of the workflow can be seen in this [video](https://www.youtube.com/watch?v=eXwho2Pq6Eg). For more details, take a look at our [paper](https://arxiv.org/abs/2102.13129) (accepted at PML4DC @ ICLR'21). For the additional material of the paper, please check the subdirectory *additional* of this repository.
 
 
 ## Installation
@@ -42,6 +42,25 @@ ANEA uses Spacy for language preprocessing (tokenization and lemmatization). It 
 Text can also be preprocessed using external tools and then uploaded as whitespace tokenized text or in the CoNLL format (one token per line).
 
 Other external preprocessing libraries can be added directly to ANEA by implementing a new Tokenizer class in autom_labeling_library/preprocessing.py (you can take a look at EstnltkTokenizer as an example) and adding it to the Preprocessing class. If you encounter any issues, just contact us.
+
+## Citation
+
+If you use this tool, please cite us:
+
+```
+@article{hedderich21ANEA,
+  author    = {Michael A. Hedderich and
+               Lukas Lange and
+               Dietrich Klakow},
+  title     = {{ANEA:} Distant Supervision for Low-Resource Named Entity Recognition},
+  journal   = {CoRR},
+  volume    = {abs/2102.13129},
+  year      = {2021},
+  url       = {https://arxiv.org/abs/2102.13129},
+  archivePrefix = {arXiv},
+  eprint    = {2102.13129},
+}
+```
 
 ## Development, Support & License
 
